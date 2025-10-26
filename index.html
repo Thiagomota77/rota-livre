@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Login → Rota Livre</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; height:100%; font-family: Arial, sans-serif; }
+    body { display:flex; height:100vh; }
+    #left { flex:1; display:flex; justify-content:center; align-items:center; background:#f3f4f6; padding:20px; }
+    #loginBox { background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.1); display:flex; flex-direction:column; gap:10px; width:300px; }
+    #loginBox h2 { margin:0 0 10px; text-align:center; }
+    input, textarea { padding:10px; border:1px solid #d1d5db; border-radius:8px; width:100%; }
+    button { padding:10px; border:none; border-radius:8px; background:#2563eb; color:#fff; cursor:pointer; }
+    button:hover { background:#1d4ed8; }
+    #right { flex:1; background:url("img/rampa_livre.jpg") no-repeat center center; background-size:cover; }
+    .err { color:#b91c1c; min-height:1.2rem; font-size:.9rem; }
+    .link { color:#2563eb; cursor:pointer; text-align:center; font-size:.9rem; }
+    #accessModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); place-items:center; z-index:9999; }
+    #accessModal .box { background:#fff; border-radius:12px; padding:20px; width:min(400px,90vw); display:flex; flex-direction:column; gap:8px; box-shadow:0 4px 12px rgba(0,0,0,.2); }
+    #accessModal h3 { margin-top:0; text-align:center; }
+    #accessModal .actions { display:flex; justify-content:flex-end; gap:8px; margin-top:10px; }
+    #msgSend { font-size:.9rem; min-height:1.2rem; }
+  </style>
+  <!-- VERSION: login-modular -->
+</head>
+<body>
+
+  <div id="left">
+    <div id="loginBox">
+      <h2>Login</h2>
+      <input id="user" type="email" placeholder="E-mail"/>
+      <input id="pass" type="password" placeholder="Senha"/>
+      <button id="btnLogin">Entrar</button>
+      <div class="err" id="err"></div>
+      <div class="link" id="lnkReset">Esqueci minha senha</div>
+      <div class="link" id="lnkAccess">Pedir acesso</div>
+    </div>
+  </div>
+
+  <div id="right"></div>
+
+  <!-- Modal de pedido de acesso -->
+  <div id="accessModal">
+    <div class="box">
+      <h3>Solicitar acesso</h3>
+      <input id="nomeNovo" type="text" placeholder="Seu nome completo"/>
+      <input id="emailNovo" type="email" placeholder="Seu e-mail"/>
+      <textarea id="motivoNovo" placeholder="Descreva o motivo do acesso"></textarea>
+      <div class="actions">
+        <button id="btnCancelAccess">Cancelar</button>
+        <button id="btnSendAccess">Enviar pedido</button>
+      </div>
+      <div id="msgSend"></div>
+    </div>
+  </div>
+
+  <!-- Importa os módulos -->
+  <script type="module" src="./js/firebaseClient.js"></script>
+  <script type="module" src="./js/login.js"></script>
+</body>
+</html>
