@@ -1,6 +1,6 @@
 // Lógica da tela de login
 import { auth } from "./firebaseClient.js";
-import { redirectIfLoggedIn } from "./authGuard.js";
+import { redirectIfLoggedIn } from "./aut.js";
 import {
   setPersistence,
   browserLocalPersistence,
