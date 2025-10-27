@@ -3,45 +3,152 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Rota Livre</title>
+  <title>Rota Livre ♿</title>
 
   <!-- Leaflet core -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <!-- Leaflet Routing Machine (OSRM) -->
+  <!-- Leaflet Routing Machine -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
   <!-- Polyline arrows -->
   <script src="https://unpkg.com/leaflet-polylinedecorator@1.7.0/dist/leaflet.polylineDecorator.min.js"></script>
 
-  <style> /* … (seu CSS do mapa exatamente como já está) … */ </style>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; height:100%; font-family: system-ui, sans-serif; }
+    :root { --header-h: 140px; }
+    header{
+      position: fixed; inset: 0 0 auto 0; z-index: 1000;
+      background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 14px;
+    }
+    h1{ font-size:16px; margin:0 0 8px; }
+    #controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    input[type="text"]{ height:36px; padding:0 10px; border:1px solid #d1d5db; border-radius:8px; min-width:260px; }
+    button{ height:36px; padding:0 12px; border:1px solid #d1d5db; border-radius:8px; background:#fff; cursor:pointer; }
+    button.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
+    #tests{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    #tests button{ font-size:12px; height:auto; padding:6px 8px; }
+    #map{ position:absolute; inset: var(--header-h) 340px 0 0; }
+
+    aside#sidebar{
+      position: fixed; top: var(--header-h); right: 0; width: 340px; bottom: 0; z-index: 900;
+      background:#fff; border-left:1px solid #e5e7eb; padding:10px 12px; overflow:auto;
+    }
+    .section-title{ font-size:14px; font-weight:600; margin:8px 0; }
+    .ramp-card{ border:1px solid #e5e7eb; border-radius:8px; padding:8px; margin-bottom:8px; display:grid; grid-template-columns: 64px 1fr auto; gap:8px; align-items:center; }
+    .ramp-card img{ width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb; }
+    .muted{ color:#6b7280; font-size:12px; }
+    .small{ font-size:12px; }
+
+    #modal{ position: fixed; inset:0; background: rgba(0,0,0,.45); display:none; place-items:center; z-index: 2000; }
+    #modal .box{ width: min(560px, 92vw); background:#fff; border-radius:12px; padding:14px; border:1px solid #e5e7eb; }
+    #modal .row{ display:flex; gap:8px; margin:6px 0; }
+    #modal input[type="text"], #modal textarea{ width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; }
+    #modal textarea{ min-height:80px; resize:vertical; }
+    #modal .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+    .legend{ display:flex; align-items:center; gap:6px; }
+    .pin{ width:18px; height:18px; border-radius:50%; display:inline-grid; place-items:center; font-size:12px; }
+    .pin.blue{ background:#2563eb; color:#fff; }
+
+    #userBox{ position:absolute; right:14px; top:10px; display:flex; gap:8px; align-items:center; font-size:12px; color:#111827; }
+    #userEmail{ color:#374151; }
+    #btnLogout{ background:#ef4444; color:#fff; border-color:#ef4444; }
+  </style>
 </head>
 <body>
-  <!-- … (seu HTML do header/controles/sidebar/modal exatamente como já está) … -->
+  <header>
+    <h1>Rotas com Rampas de Acesso ♿</h1>
 
-  <!-- MÓDULOS DE AUTH -->
-  <script type="module" src="./js/firebaseClient.js"></script>
+    <div id="userBox">
+      <span id="userEmail">—</span>
+      <button id="btnLogout">Sair</button>
+    </div>
+
+    <div id="controls">
+      <input id="orig" type="text" placeholder="Origem"/>
+      <input id="dest" type="text" placeholder="Destino"/>
+      <button id="btnGo" class="primary">Traçar rota</button>
+      <button id="btnViaRamps">Traçar via rampas</button>
+      <button id="btnSwap">Inverter</button>
+      <button id="btnMyLoc">Minha localização</button>
+      <button id="btnAddRamp" class="primary">Adicionar rampa</button>
+      <button id="btnClear">Limpar rota</button>
+      <span class="legend"><span class="pin blue">♿</span><span class="small muted">Rampa salva</span></span>
+    </div>
+
+    <div id="tests">
+      <button data-o="Av. Paulista, São Paulo" data-d="Aeroporto de Congonhas, São Paulo">Paulista → Congonhas</button>
+      <button data-o="Sorocaba, SP" data-d="Campinas, SP">Sorocaba → Campinas</button>
+    </div>
+  </header>
+
+  <div id="map"></div>
+
+  <aside id="sidebar">
+    <div class="section-title">Rampas salvas</div>
+    <div id="rampList"></div>
+  </aside>
+
+  <!-- Modal -->
+  <div id="modal">
+    <div class="box">
+      <div class="section-title">Cadastrar rampa</div>
+      <div class="muted small" id="coordsInfo">Coordenadas: -</div>
+      <div class="row"><input id="rName" type="text" placeholder="Nome"/></div>
+      <div class="row"><textarea id="rDesc" placeholder="Descrição"></textarea></div>
+      <div class="row"><input id="rPhoto" type="file" accept="image/*"/></div>
+      <div class="actions">
+        <button id="rCancel">Cancelar</button>
+        <button id="rSave" class="primary">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase + Auth Guard -->
   <script type="module">
-    import { requireAuth, doLogout } from "./js/aut.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
-    // Protege a página: se não logado → login.html
-    requireAuth("login.html", (user) => {
-      const span = document.getElementById('userEmail');
-      if (span) span.textContent = user.email || "Logado";
+    const firebaseConfig = {
+      apiKey: "AIzaSyDPxzehE70OnXuvfdEdquTyjjy3H2QiDFI",
+      authDomain: "rota-livre-9b4b3.firebaseapp.com",
+      projectId: "rota-livre-9b4b3",
+      storageBucket: "rota-livre-9b4b3.firebasestorage.app",
+      messagingSenderId: "385216702525",
+      appId: "1:385216702525:web:c34f4973585f4112162254",
+      measurementId: "G-QPCXF5YN9G"
+    };
 
-      const btnLogout = document.getElementById('btnLogout');
-      btnLogout?.addEventListener('click', async () => {
-        try { await doLogout("login.html"); } 
-        catch(e){ alert("Não foi possível sair: " + e.message); }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        location.replace("/index.html");
+        return;
+      }
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('btnLogout').addEventListener('click', async () => {
+        await signOut(auth);
+        location.replace("/index.html");
       });
     });
   </script>
 
-  <!-- App do mapa/rotas (SEU SCRIPT GRANDE AQUI, igual já está) -->
+  <!-- Mapa e funcionalidades -->
   <script>
-    /* … todo o seu JS do Leaflet/rotas/rampas exatamente como estava … */
+    // === Tudo do mapa exatamente como você já tem ===
+    const map = L.map('map').setView([-23.5015, -47.4526], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contrib.'
+    }).addTo(map);
+    // ... (seu JS de rotas, rampas e modal aqui)
   </script>
 </body>
 </html>
+
