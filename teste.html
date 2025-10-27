@@ -18,35 +18,75 @@
 
   <style>
     * { box-sizing: border-box; }
-    html, body { margin:0; padding:0; height:100%; font-family: system-ui, sans-serif; }
-    :root { --header-h: 140px; }
+    html, body { margin:0; padding:0; height:100%; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif; }
+    :root { --header-h: 140px; --sidebar-w: 340px; }
+
+    /* ===== Header ===== */
     header{
       position: fixed; inset: 0 0 auto 0; z-index: 1000;
       background:#fff; border-bottom:1px solid #e5e7eb; padding:10px 14px;
     }
     h1{ font-size:16px; margin:0 0 8px; }
     #controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    input[type="text"]{ height:36px; padding:0 10px; border:1px solid #d1d5db; border-radius:8px; min-width:260px; }
-    button{ height:36px; padding:0 12px; border:1px solid #d1d5db; border-radius:8px; background:#fff; cursor:pointer; }
+    input[type="text"]{
+      height:40px; padding:0 12px; border:1px solid #d1d5db; border-radius:10px; min-width:260px;
+    }
+    button{
+      height:40px; padding:0 14px; border:1px solid #d1d5db; border-radius:10px; background:#fff; cursor:pointer;
+    }
     button.primary{ background:#2563eb; color:#fff; border-color:#2563eb; }
     #tests{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-    #tests button{ font-size:12px; height:auto; padding:6px 8px; }
-    #map{ position:absolute; inset: var(--header-h) 340px 0 0; }
+    #tests button{ font-size:12px; height:auto; padding:6px 8px; border-radius:8px; }
+
+    /* Usuário / sair */
+    #userBox{ position:absolute; right:14px; top:10px; display:flex; gap:8px; align-items:center; font-size:12px; color:#111827; }
+    #userEmail{ color:#374151; }
+    #btnLogout{ background:#ef4444; color:#fff; border-color:#ef4444; }
+
+    /* ===== Map / Sidebar ===== */
+    #map{ position:absolute; inset: var(--header-h) 0 0 0; }            /* mobile first */
+
+    @media (min-width: 900px){
+      #map{ inset: var(--header-h) var(--sidebar-w) 0 0; }              /* espaço para sidebar fixa no desktop */
+    }
 
     aside#sidebar{
-      position: fixed; top: var(--header-h); right: 0; width: 340px; bottom: 0; z-index: 900;
+      position: fixed; top: var(--header-h); right: 0; bottom: 0; z-index: 900;
+      width: var(--sidebar-w);
       background:#fff; border-left:1px solid #e5e7eb; padding:10px 12px; overflow:auto;
+      transition: transform .25s ease;
     }
+
+    /* Mobile: sidebar = gaveta */
+    @media (max-width: 899.98px){
+      aside#sidebar{ transform: translateX(100%); box-shadow: -12px 0 24px rgba(0,0,0,.08); }
+      aside#sidebar.open{ transform: translateX(0); }
+      #toggleSidebar{
+        position: fixed; right:12px; bottom:12px; z-index:1200;
+        height:44px; padding:0 14px; border-radius:999px;
+        background:#2563eb; color:#fff; border:none; box-shadow: 0 8px 20px rgba(37,99,235,.35);
+      }
+    }
+    @media (min-width: 900px){
+      #toggleSidebar{ display:none; }
+    }
+
     .section-title{ font-size:14px; font-weight:600; margin:8px 0; }
-    .ramp-card{ border:1px solid #e5e7eb; border-radius:8px; padding:8px; margin-bottom:8px; display:grid; grid-template-columns: 64px 1fr auto; gap:8px; align-items:center; }
-    .ramp-card img{ width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb; }
+    .ramp-card{
+      border:1px solid #e5e7eb; border-radius:12px; padding:8px; margin-bottom:8px;
+      display:grid; grid-template-columns: 64px 1fr auto; gap:8px; align-items:center;
+    }
+    .ramp-card img{ width:64px; height:64px; object-fit:cover; border-radius:8px; border:1px solid #e5e7eb; }
     .muted{ color:#6b7280; font-size:12px; }
     .small{ font-size:12px; }
 
+    /* ===== Modal ===== */
     #modal{ position: fixed; inset:0; background: rgba(0,0,0,.45); display:none; place-items:center; z-index: 2000; }
-    #modal .box{ width: min(560px, 92vw); background:#fff; border-radius:12px; padding:14px; border:1px solid #e5e7eb; }
+    #modal .box{
+      width: min(560px, 92vw); background:#fff; border-radius:14px; padding:14px; border:1px solid #e5e7eb;
+    }
     #modal .row{ display:flex; gap:8px; margin:6px 0; }
-    #modal input[type="text"], #modal textarea{ width:100%; padding:8px; border:1px solid #d1d5db; border-radius:8px; }
+    #modal input[type="text"], #modal textarea{ width:100%; padding:10px; border:1px solid #d1d5db; border-radius:10px; }
     #modal textarea{ min-height:80px; resize:vertical; }
     #modal .actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
 
@@ -54,49 +94,55 @@
     .pin{ width:18px; height:18px; border-radius:50%; display:inline-grid; place-items:center; font-size:12px; }
     .pin.blue{ background:#2563eb; color:#fff; }
 
-    #userBox{ position:absolute; right:14px; top:10px; display:flex; gap:8px; align-items:center; font-size:12px; color:#111827; }
-    #userEmail{ color:#374151; }
-    #btnLogout{ background:#ef4444; color:#fff; border-color:#ef4444; }
+    /* Toque confortável no mobile */
+    @media (max-width: 599.98px){
+      #controls input[type="text"], #controls button{ flex: 1 1 100%; }
+      #controls{ gap:10px; }
+      h1{ font-size:15px; }
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>Rotas com Rampas de Acesso ♿</h1>
 
-    <div id="userBox">
+    <div id="userBox" aria-live="polite">
       <span id="userEmail">—</span>
-      <button id="btnLogout">Sair</button>
+      <button id="btnLogout" title="Sair">Sair</button>
     </div>
 
     <div id="controls">
-      <input id="orig" type="text" placeholder="Origem"/>
-      <input id="dest" type="text" placeholder="Destino"/>
+      <input id="orig" type="text" placeholder="Origem" inputmode="text" autocomplete="off"/>
+      <input id="dest" type="text" placeholder="Destino" inputmode="text" autocomplete="off"/>
       <button id="btnGo" class="primary">Traçar rota</button>
-      <button id="btnViaRamps">Traçar via rampas</button>
-      <button id="btnSwap">Inverter</button>
-      <button id="btnMyLoc">Minha localização</button>
+      <button id="btnViaRamps" title="Traçar via rampas marcadas">Traçar via rampas</button>
+      <button id="btnSwap" title="Inverter origem e destino">Inverter</button>
+      <button id="btnMyLoc" title="Usar minha localização">Minha localização</button>
       <button id="btnAddRamp" class="primary">Adicionar rampa</button>
       <button id="btnClear">Limpar rota</button>
       <span class="legend"><span class="pin blue">♿</span><span class="small muted">Rampa salva</span></span>
     </div>
 
-    <div id="tests">
+    <div id="tests" aria-label="Casos de teste">
       <button data-o="Av. Paulista, São Paulo" data-d="Aeroporto de Congonhas, São Paulo">Paulista → Congonhas</button>
       <button data-o="Sorocaba, SP" data-d="Campinas, SP">Sorocaba → Campinas</button>
     </div>
   </header>
 
-  <div id="map"></div>
+  <!-- Botão flutuante (só mobile) -->
+  <button id="toggleSidebar" aria-controls="sidebar" aria-expanded="false">Rampas</button>
 
-  <aside id="sidebar">
+  <div id="map" role="region" aria-label="Mapa de rotas"></div>
+
+  <aside id="sidebar" aria-label="Lista de rampas salvas">
     <div class="section-title">Rampas salvas</div>
     <div id="rampList"></div>
   </aside>
 
   <!-- Modal -->
-  <div id="modal">
+  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="box">
-      <div class="section-title">Cadastrar rampa</div>
+      <div id="modalTitle" class="section-title">Cadastrar rampa</div>
       <div class="muted small" id="coordsInfo">Coordenadas: -</div>
       <div class="row"><input id="rName" type="text" placeholder="Nome"/></div>
       <div class="row"><textarea id="rDesc" placeholder="Descrição"></textarea></div>
@@ -131,7 +177,7 @@
         location.replace("/index.html");
         return;
       }
-      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('userEmail').textContent = user.email || "Logado";
       document.getElementById('btnLogout').addEventListener('click', async () => {
         await signOut(auth);
         location.replace("/index.html");
@@ -139,16 +185,294 @@
     });
   </script>
 
-  <!-- Mapa e funcionalidades -->
+  <!-- Mapa + Rotas + Rampas -->
   <script>
-    // === Tudo do mapa exatamente como você já tem ===
-    const map = L.map('map').setView([-23.5015, -47.4526], 12);
+    /* ========= LAYOUT DINÂMICO ========= */
+    function setHeaderHeightVar(){
+      const header = document.querySelector('header');
+      document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+    }
+    window.addEventListener('load', setHeaderHeightVar);
+    window.addEventListener('resize', () => requestAnimationFrame(setHeaderHeightVar));
+
+    // Gaveta da sidebar (mobile)
+    const sidebar = document.getElementById('sidebar');
+    const toggleSidebarBtn = document.getElementById('toggleSidebar');
+    function toggleSidebar(){
+      const open = sidebar.classList.toggle('open');
+      toggleSidebarBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    toggleSidebarBtn.addEventListener('click', toggleSidebar);
+
+    /* ========= MAPA ========= */
+    const map = L.map('map', { zoomControl: true }).setView([-23.5015, -47.4526], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contrib.'
     }).addTo(map);
-    // ... (seu JS de rotas, rampas e modal aqui)
+
+    // Fecha a gaveta ao tocar no mapa (mobile)
+    document.getElementById('map').addEventListener('click', () => {
+      if (window.matchMedia('(max-width: 899.98px)').matches && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        toggleSidebarBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    /* ========= UTIL ========= */
+    const origEl = document.getElementById('orig');
+    const destEl = document.getElementById('dest');
+    const btnGo = document.getElementById('btnGo');
+    const btnVia = document.getElementById('btnViaRamps');
+    const btnSwap = document.getElementById('btnSwap');
+    const btnMyLoc = document.getElementById('btnMyLoc');
+    const btnAddRamp = document.getElementById('btnAddRamp');
+    const btnClear = document.getElementById('btnClear');
+    const testsEl = document.getElementById('tests');
+    const rampListEl = document.getElementById('rampList');
+
+    const STORAGE_KEY = 'rampas_v1';
+    function km(m){ return (m/1000).toFixed(1) + ' km'; }
+    function min(s){ return Math.round(s/60) + ' min'; }
+
+    function parseLatLon(text){
+      const m = text.trim().match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if(!m) return null; return { lat: parseFloat(m[1]), lon: parseFloat(m[2]) };
+    }
+
+    async function geocodeOSM(q){
+      const coord = parseLatLon(q); if(coord) return coord;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=0&accept-language=pt-BR&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if(!res.ok) throw new Error('Falha no geocoding');
+      const data = await res.json();
+      if(!data || !data.length) return null;
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    }
+
+    /* ========= ROTEAMENTO ========= */
+    let routingCtrl = null;
+    let arrows = null;
+
+    function clearRoute(){
+      if(routingCtrl){ map.removeControl(routingCtrl); routingCtrl = null; }
+      if(arrows){ map.removeLayer(arrows); arrows = null; }
+    }
+
+    function drawRoute(points, isRampRoute){
+      clearRoute();
+
+      // Converte pro formato L.latLng
+      const waypoints = points.map(p => L.latLng(p.lat, p.lon));
+
+      // Evita erro se só existir 1 waypoint
+      if(waypoints.length < 2){
+        alert('Informe pelo menos origem e destino.');
+        return;
+      }
+
+      routingCtrl = L.Routing.control({
+        waypoints,
+        router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
+        lineOptions: {
+          styles: isRampRoute ? [
+            { color: '#7f1d1d', opacity: 0.35, weight: 10 },
+            { color: '#dc2626', opacity: 0.9,  weight: 6 }
+          ] : [
+            { color: '#1f2937', opacity: 0.35, weight: 10 },
+            { color: '#2563eb', opacity: 0.9,  weight: 6 }
+          ],
+          addWaypoints: false
+        },
+        show: true,
+        collapsible: true,
+        language: 'pt-BR',
+        routeWhileDragging: false
+      }).addTo(map);
+
+      map.fitBounds(L.latLngBounds(waypoints), { padding: [40,40] });
+
+      routingCtrl.on('routesfound', (e) => {
+        try{
+          const line = L.polyline(e.routes[0].coordinates);
+          arrows = L.polylineDecorator(line, {
+            patterns: [
+              { offset: 12, repeat: 60,
+                symbol: L.Symbol.arrowHead({
+                  pixelSize: 10, polygon: false,
+                  pathOptions: { color: isRampRoute ? '#dc2626' : '#2563eb', weight: 3 }
+                })
+              }
+            ]
+          }).addTo(map);
+          const s = e.routes[0].summary; console.log(`Rota: ${km(s.totalDistance)} • ${min(s.totalTime)}`);
+        } catch(err){ console.warn('Falha ao desenhar setas:', err); }
+      });
+
+      routingCtrl.on('routingerror', () => {
+        alert('Não foi possível calcular a rota. Tente outro ponto.');
+      });
+    }
+
+    async function routeSimple(){
+      const o = origEl.value.trim();
+      const d = destEl.value.trim();
+      if(!o || !d){ alert('Preencha origem e destino.'); return; }
+      try{
+        const [A, B] = await Promise.all([geocodeOSM(o), geocodeOSM(d)]);
+        if(!A || !B){ alert('Endereço não encontrado.'); return; }
+        drawRoute([A, B], false);
+      }catch(e){ alert('Erro: ' + e.message); }
+    }
+
+    function dist2(p, q){ const dx = p.lat - q.lat, dy = p.lon - q.lon; return dx*dx + dy*dy; }
+
+    async function routeViaRamps(){
+      const o = origEl.value.trim();
+      const d = destEl.value.trim();
+      if(!o || !d){ alert('Preencha origem e destino.'); return; }
+      try{
+        const [A, B] = await Promise.all([geocodeOSM(o), geocodeOSM(d)]);
+        if(!A || !B){ alert('Endereço não encontrado.'); return; }
+
+        const selected = getRamps().filter(r => r.useInRoute);
+        if(!selected.length){ alert('Marque pelo menos uma rampa em "Rampas salvas".'); return; }
+
+        selected.sort((r1, r2) => dist2(A, r1) - dist2(A, r2));
+        const points = [A, ...selected, B];
+        drawRoute(points, true);
+      }catch(e){ alert('Erro: ' + e.message); }
+    }
+
+    /* ========= RAMPAS (localStorage) ========= */
+    function getRamps(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(_){ return []; } }
+    function setRamps(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+    function wheelchairIcon(){
+      return L.divIcon({ className: 'wheelchair-pin', html: '<div class="pin blue">♿</div>', iconSize: [26,26], iconAnchor: [13,13] });
+    }
+
+    let rampMarkers = [];
+    function loadRampMarkers(){
+      rampMarkers.forEach(m => map.removeLayer(m));
+      rampMarkers = [];
+      getRamps().forEach((r, idx) => {
+        const m = L.marker([r.lat, r.lon], { icon: wheelchairIcon() })
+          .addTo(map)
+          .bindPopup(
+            `<b>${r.name || 'Rampa'}</b><br>` +
+            `${r.desc ? r.desc + '<br>' : ''}` +
+            `${r.photo ? `<img src="${r.photo}" alt="foto" style="width:180px;height:120px;object-fit:cover;margin-top:6px;border-radius:6px;border:1px solid #e5e7eb;"/>` : ''}` +
+            `<br><button id="use-${idx}">Usar na rota</button>`
+          );
+        m.on('popupopen', () => {
+          const btn = document.getElementById(`use-${idx}`);
+          if(btn){ btn.onclick = () => { const arr = getRamps(); arr[idx].useInRoute = true; setRamps(arr); renderRamps(); m.closePopup(); alert('Marcada para uso na rota.'); }; }
+        });
+        rampMarkers.push(m);
+      });
+    }
+
+    function renderRamps(){
+      rampListEl.innerHTML = '';
+      const ramps = getRamps();
+      if(!ramps.length){
+        const div = document.createElement('div');
+        div.className = 'muted small';
+        div.textContent = 'Nenhuma rampa salva ainda. Clique em "Adicionar rampa" e depois no mapa.';
+        rampListEl.appendChild(div);
+        return;
+      }
+      ramps.forEach((r, idx) => {
+        const card = document.createElement('div'); card.className = 'ramp-card';
+        const img = document.createElement('img'); img.src = r.photo || ''; img.alt = 'Foto da rampa';
+        const info = document.createElement('div');
+        info.innerHTML = `<div><b>${r.name || 'Rampa s/ nome'}</b></div>
+                          <div class="muted small">${r.desc ? r.desc : ''}</div>
+                          <div class="muted small">${r.lat.toFixed(6)}, ${r.lon.toFixed(6)}</div>`;
+        const actions = document.createElement('div');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.title = 'Usar na rota'; cb.checked = !!r.useInRoute;
+        cb.onchange = () => { r.useInRoute = cb.checked; ramps[idx] = r; setRamps(ramps); };
+        const rm = document.createElement('button'); rm.textContent = 'Excluir'; rm.className = 'small';
+        rm.onclick = () => { if(confirm('Excluir esta rampa?')){ ramps.splice(idx,1); setRamps(ramps); loadRampMarkers(); renderRamps(); } };
+        actions.append(cb, document.createElement('br'), rm);
+        card.append(img, info, actions);
+        rampListEl.appendChild(card);
+      });
+    }
+
+    /* ========= MODAL ========= */
+    let pendingLatLng = null;
+    const modal = document.getElementById('modal');
+    const coordsInfo = document.getElementById('coordsInfo');
+    const rName = document.getElementById('rName');
+    const rDesc = document.getElementById('rDesc');
+    const rPhoto = document.getElementById('rPhoto');
+    const rCancel = document.getElementById('rCancel');
+    const rSave = document.getElementById('rSave');
+
+    function openModal(ll){
+      pendingLatLng = ll; coordsInfo.textContent = `Coordenadas: ${ll.lat.toFixed(6)}, ${ll.lng.toFixed(6)}`;
+      rName.value = ''; rDesc.value = ''; rPhoto.value = '';
+      modal.style.display = 'grid';
+    }
+    function closeModal(){ modal.style.display = 'none'; }
+
+    function readFileToDataURL(file){
+      return new Promise((resolve) => { const fr = new FileReader(); fr.onload = () => resolve(fr.result); fr.readAsDataURL(file); });
+    }
+
+    rCancel.onclick = closeModal;
+    rSave.onclick = async () => {
+      if(!pendingLatLng) return closeModal();
+      const ramps = getRamps();
+      let photo64 = '';
+      if(rPhoto.files && rPhoto.files[0]){ photo64 = await readFileToDataURL(rPhoto.files[0]); }
+      const item = { id: Date.now(), name: rName.value.trim(), desc: rDesc.value.trim(), photo: photo64, lat: pendingLatLng.lat, lon: pendingLatLng.lng, useInRoute: false };
+      ramps.push(item); setRamps(ramps);
+      closeModal(); loadRampMarkers(); renderRamps();
+    };
+
+    /* ========= EVENTOS UI ========= */
+    btnGo.addEventListener('click', routeSimple);
+    btnVia.addEventListener('click', routeViaRamps);
+    btnSwap.addEventListener('click', () => { const t = origEl.value; origEl.value = destEl.value; destEl.value = t; });
+    btnClear.addEventListener('click', clearRoute);
+
+    btnMyLoc.addEventListener('click', () => {
+      if(!navigator.geolocation) return alert('Geolocalização não suportada.');
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        map.setView([latitude, longitude], 14);
+        L.circleMarker([latitude, longitude], { radius: 6 }).addTo(map).bindPopup('Você está aqui');
+        origEl.value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+      }, () => alert('Não foi possível obter localização.'));
+    });
+
+    testsEl.addEventListener('click', (ev)=>{
+      const btn = ev.target.closest('button[data-o]');
+      if(!btn) return;
+      origEl.value = btn.getAttribute('data-o');
+      destEl.value = btn.getAttribute('data-d');
+      routeSimple();
+    });
+
+    // Fluxo de adicionar rampa
+    let addMode = false;
+    btnAddRamp.addEventListener('click', () => {
+      addMode = !addMode;
+      btnAddRamp.textContent = addMode ? 'Clique no mapa… (Cancelar)' : 'Adicionar rampa';
+    });
+
+    map.on('click', (e) => {
+      if(!addMode) return;
+      addMode = false; btnAddRamp.textContent = 'Adicionar rampa';
+      openModal(e.latlng);
+    });
+
+    // Inicializa marcadores/lista
+    loadRampMarkers();
+    renderRamps();
   </script>
 </body>
 </html>
-
