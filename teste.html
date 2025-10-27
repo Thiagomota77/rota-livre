@@ -24,7 +24,7 @@
   <!-- MÓDULOS DE AUTH -->
   <script type="module" src="./js/firebaseClient.js"></script>
   <script type="module">
-    import { requireAuth, doLogout } from "./js/authGuard.js";
+    import { requireAuth, doLogout } from "./js/aut.js";
 
     // Protege a página: se não logado → login.html
     requireAuth("login.html", (user) => {
